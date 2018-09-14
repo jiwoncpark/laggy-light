@@ -1,9 +1,10 @@
 # Temp
 *#
 *~
-*/ipynb_checkpoints
+*/.ipynb_checkpoints
 */practice_notebook.ipynb
 */Untitled.ipynb
+*.pkl
 
 # Packaging
 *.pyc
@@ -13,3 +14,4 @@
 *.txt
 *.db
 *.sqlite
+*.pdf
