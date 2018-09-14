@@ -1,8 +1,9 @@
 from __future__ import absolute_import, division, print_function
 
 import pandas as pd
+import numpy as np
 
-__all__ = ['dict_of_dict_to_columns', 'a_relationship_b', 'get_unique_values']
+__all__ = ['dict_of_dict_to_columns', 'a_relationship_b', 'get_unique_values', 'gaussian_noise',]
 
 def dict_of_dict_to_columns(main_df, dict_column, dict_key):
     """Converts a dictionary entry of a dictionary defined in string format into columns"""
@@ -54,3 +55,22 @@ def a_relationship_b(a, b, column=None, column_a=None, column_b=None, relationsh
         return values_a == values_b
     else:
         valueError("Relationship must be one of 'subset', 'superset', 'equal'.")
+
+def gaussian_noise(mean, stdev, shape=None, measurement=1.0):
+    """Given a mean and a standard deviation of a measurement, adds Gaussian noise to the data
+    
+    Parameters
+    ----------
+    mean : float
+        the mean of Gaussian
+    stdev : float
+        the standard deviation of Gaussian
+    shape : array or list or None
+        the shape of noise to be returned
+        If None, returns a scalar noise [default: None]
+    measurement : float
+        scaling factor, for adding fractional errors.
+        If 1.0, error is absolute. [default: 1.0]
+                   
+    """
+    return measurement*np.random.normal(loc=mean, scale=stdev, size=shape)
