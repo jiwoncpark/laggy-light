@@ -1,0 +1,12 @@
+# Temp
+*#
+*~
+*/ipynb_checkpoints
+*/practice_notebook.ipynb
+*/Untitled.ipynb
+
+# Data
+*.csv
+*.txt
+*.db
+*.sqlite
