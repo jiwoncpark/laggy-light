@@ -5,6 +5,9 @@
 */practice_notebook.ipynb
 */Untitled.ipynb
 
+# Packaging
+*.pyc
+
 # Data
 *.csv
 *.txt

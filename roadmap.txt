@@ -1,0 +1,94 @@
+Roadmap for modularizing code in laggy-light
+This can turn into docstrings later.
+
+Example Usage
+^^^^^^^^^^^^^
+dataloader = TDC1LightCurves(curves_path=<some_path>, truth_path=<some_other_path>)
+queried_dataloader = dataloader.query(mag_error_less_than=0.1, select_after_whitening=True, inplace=False)
+light_curves = queried_dataloader.load_curves(whiten=True)
+truth_info = queried_dataloader.load_truth()
+
+model = SplineModel(num_knots=50)
+optimizer = Optimizer(schedule=<some_schedule>)
+model_fit = optimizer.fit(model=model, data=light_curves)
+
+LightCurves : `laggylight/data/lightcurves.py`
+    Loads in light curves of a lensed quasar system which can be from
+    any catalog, e.g. TDC1 text files, sprinkled SQLite DB,
+    and turns them into a Pandas Dataframe of the same format.
+    In this way, it acts as the Great Equalizer.
+    Each catalog format should be a subclass of LightCurves, e.g. TDC1LightCurves, SprinkledLightCurves.
+    The parent class LightCurves contains common setters.
+
+    Attributes
+    ----------
+    light_curves : Pandas.Dataframe
+        The dataframe with a unified schema that's output by load()
+    truth_info : Pandas.Dataframe
+
+    Methods
+    -------
+    __init__ 
+        light_curves_path : list or str
+            If None, fetches from hardcoded remote location. Can be a list of paths or one path.
+        truth_info_path : str
+            If None, ~
+        observation_path : str
+            Optional argument in case the given catalog of truth info is missing observation-related columns.
+        subcatalog : str
+
+        Sets self.curves, self.truth, self.subcatalog
+
+        calls _reformat_light_curves(), _reformat_truth_info
+
+    __reformat_light_curves()
+        Private method in subclass for reading in the catalog of all the systems and converting to a Pandas Dataframe. Saves the Dataframe in self.curves.
+
+        Columns are lens_id, agn_image_id, system_wide_marker (0, 1 for double and 0, 1, 2, 3 for quad) mjd, magnitude, magnitude_error, filter (if input dataset is multifilter)
+
+        will call _merge_tables() for SprinkledLightCurves
+        
+    _reformat_truth_info()
+        Private method in subclass for reading in the catalog of all the systems and converting to a Pandas Dataframe. Saves the Dataframe in self.truth.
+
+        Columns are lens_id, agn_image_id_0, agn_image_id_1
+
+    _whiten(inplace=False)
+        inplace : Boolean
+        if whiten is called and there is no _whiten() function in the class or no filter column, raise ValueError
+    
+    query(unique_id=None, mag_error_less_than=None, time_delay_less_than=None, custom_query=None, is_quad=None, query_after_whitening=False, inplace=False)
+        Selects a system from the catalog based on the given attributes.
+        whitened : Boolean
+        If the catalog has multi-filter magnitudes, whether to whiten them before selection.
+        (I predict this keyword will take string arguments as I add more complex whitening strategies later.) Defaults to False.
+
+    get_pycs_lightcurve_list(input_path=None)
+        Wrapper for getting the list of pycs lightcurve objects representing a system
+        If load() has been called, fetch `self.light_curves`.
+        Else, require an input dataframe with the LightCurves schema    
+    
+    load_light_curves(save_path=None)
+        raise NotImplementedError for parent class
+        Loads a Pandas Dataframe where the columns are mjd, magnitudes and magnitude errors of each image in the system and the rows are visits, e.g.
+        mjd 32A_magnitude 32A_mag_error 32B_magnitude ...
+
+    load_truth_info(save_path=None)
+
+Q: What if we want to process several systems at a time? Let's think about this later. Probably can't.
+Q: How to deal with multi-filter light curves as in sprinkled.db?
+    A: There are several ways to do this...
+    Option 1 (easiest): Light curves in the U-filter and G-filter of the same image (call them U_A and G_A, for example) are taken to be separate. So they might as well be different systems. We'd only want to compare the time delay between U_A and U_B and G_A and G_B at the analysis step. Downside is that we probably don't have enough measurements per filter.
+    Option 2: We "whiten" the multi-filter curves into one "white" curve, which means we offset each magnitude measurement by the filter-wide mean minus the overall (filter-unspecific) mean. Make sure to whiten in mag units rather than flux for precision. See https://github.com/LSSTDESC/SLTimer/blob/f7f37a1a97cbd16e31363fc8baf076525c9bc280/python/desc/sltimer/reading.py#L322
+
+Model : `laggylight/models/model.py
+
+Optimizer : `laggylight/optimizer/
+
+Plot : 'laggylight/plotting/'
+
+Data and model/optimizer are independent, but model and optimizer depend on the package used.
+
+
+# TODOs
+Change Dataloader --> Data, dataloader.py --> load_data.py
